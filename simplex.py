@@ -1,5 +1,3 @@
-from re import S
-from tkinter import W
 import numpy as np
 import time
 
@@ -209,6 +207,7 @@ s_cnt = len(e_right)
 #e_cnt=len(e_right)
 '''
 
+<<<<<<< HEAD
 
 #それぞれ変数の数を決める
 for cmp in e_compare:
@@ -223,6 +222,10 @@ for cmp in e_compare:
 
 start=time.time()
 simplex_table = SimplexTable(v_cnt=v_cnt, s_cnt=s_cnt,a_cnt=a_cnt, obj=obj, e_left=e_left, e_right=e_right, e_compare=e_compare)
+=======
+start=time.time()
+simplex_table = SimplexTable(v_cnt=2, s_cnt=s_cnt, obj=obj, e_left=e_left, e_right=e_right, e_compare=e_compare)
+>>>>>>> 6ef73b8585a7e62bf37fc318acbbc43fe4ed367a
 simplex_table.choose_pivot()
 
 finish=time.time()
