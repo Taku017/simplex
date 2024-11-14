@@ -163,7 +163,7 @@ class SimplexTable:
     b=self.bcol[pivot_col-self.o_cnt]    #bは小数になっている
     self.bases[int(b)]=0        #basesのb番目を0にする
     self.count+=1   #回数を＋1
-
+    self.bcol[pivot_col-self.o_cnt]=pivot_row-1
     print("\n"+str(self.count)+" time bases list:")
     print(self.bases)
     print(np.round(self.table,3))               #小数点以下を三桁で表示
