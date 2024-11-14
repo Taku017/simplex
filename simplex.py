@@ -13,13 +13,14 @@ class SimplexTable:
     self.e_compare=e_compare
     self.count=0         #基底の入れ換え操作の回数
     self.ans= np.zeros(s_cnt+v_cnt+a_cnt)     #最適解を入れるリスト
- 
+    self.bcol=np.zeros(len(e_right))   #基底の数だけ要素を持つリスト
+
     if a_cnt!=0:#目的関数の数が2つ必要な時
        self.o_cnt=2
     else:
        self.o_cnt=1
     
-#スラック変数に当たるビットを1にする
+#基底変数に当たる要素を1にする
     if a_cnt==0:  #二段階法しないとき
         i=self.v_cnt
         while i<self.v_cnt+self.s_cnt:        
@@ -28,67 +29,66 @@ class SimplexTable:
 
     print(v_cnt,s_cnt,a_cnt)   
 
-       
+    self.table=self._create_table()
+    if a_cnt==0:            #二段階法を適用しなくてよいとき
+      self.set_value1()
+    if a_cnt>0:             #二段階法を適用するとき
+      self.set_value2()
+    
     print("bases list:")
     print(self.bases)
-    
-    if a_cnt==0:            #二段階法を適用しなくてよいとき
-        self.table=self._create_table()
-    if a_cnt>0:             #二段階法を適用するとき
-        self.table=self._create_table2()
-
+    print(self.table)
 
   def _create_table(self):
-    c_table=np.zeros((len(self.e_left)+1,self.v_cnt+self.s_cnt+1))  #このメソッド内だけの名前で０行列を作る     
-    c_table[1:self.s_cnt+1, 1:self.v_cnt+1] = self.e_left  # 制約式の左辺の係数
+    c_table=np.zeros((len(self.e_left)+self.o_cnt,self.v_cnt+self.s_cnt+self.a_cnt+1))  #このメソッド内だけの名前で０行列を作る。行の数を基底変数+目的関数の数にする(基底変数の数と制約式の数は等しい)
+    c_table[self.o_cnt:self.s_cnt+self.o_cnt, 1:self.v_cnt+1] = self.e_left  # 制約式の左辺の係数
         
-    c_table[0, 1:self.v_cnt+1] = self.obj
-
+    c_table[self.o_cnt-1, 1:self.v_cnt+1] = self.obj
+  
+    return c_table          #生成した行列を__init__の中に戻す
+    
+    
+    
+   
+  def set_value1(self):
     for i in range(s_cnt):
-        c_table[i+1, self.v_cnt + i+1] = 1  # 基底のスラック変数を追加（１の要素）
-        c_table[i+1, 0] = self.e_right[i]  # 右辺の値を設定
-    print(c_table)
-
-    return c_table          #生成した行列を__init__の中に戻す
+            self.table[i+self.o_cnt, self.v_cnt + i+1] = 1  # 基底のスラック変数を追加（１の要素）
+            self.table[i+1, 0] = self.e_right[i]  # 右辺の値を設定
 
 
-  def _create_table2(self):      #二段階法をするときのメソッド
-    c_table=np.zeros((len(self.e_left)+2,self.v_cnt+self.s_cnt+self.a_cnt+1)) #行の数を基底変数＋１にする(基底変数の数と制約式の数は等しい)
-    c_table[2:self.s_cnt+2, 1:self.v_cnt+1] = self.e_left 
-    print(self.obj)
-    c_table[1, 1:self.v_cnt+1] = self.obj
 
-    for i in range(len(self.e_right)):
-        c_table[i+2, 0] = self.e_right[i]  # 右辺の値を設定
 
-    i=0 #考える制約式の番号
-    j=0 #表の座標に使う
-    while i<len(self.e_right):  #スラック変数の係数を表に書くループ
-        if self.e_compare[i]=="Less":
-            c_table[j+2][j+v_cnt+1]=1   #Lessのときはスラック変数が基底
-            j+=1
-        if self.e_compare[i]=="Greater":
-            c_table[j+2][j+v_cnt+1]=-1  
-            j+=1
-        i+=1
+  def set_value2(self):      #二段階法をするときのメソッド
+        j=0 #スラック変数を記入する列に使う(0からs_cnt-1まで変化)
+        k=0 #人為変数変数を記入する列に使う(0からa_cnt-1まで変化)
+        m=0 
+        for i in range(len(self.e_right)):  #iは行に使う
+            self.table[i+self.o_cnt, 0] = self.e_right[i]  # 右辺の値を設定
+            #スラック変数と人為の係数を表に書く(行ごとに)
+            if self.e_compare[i]=="Less":
+                self.table[i+self.o_cnt][j+self.v_cnt+1]=1
+                j+=1
+                self.bases[j+self.v_cnt]=1      #Lessのスラック変数は基底
+            if self.e_compare[i]=="Greater":
+                self.table[i+self.o_cnt][j+self.v_cnt+1]=-1     #スラック変数は係数-1
+                j+=1
+                self.table[i+self.o_cnt][k+self.v_cnt+(self.s_cnt)+1]=1     #人為変数は1
+                self.bases[k+self.v_cnt+(self.s_cnt)]=1
+                self.bcol[m]=k+self.v_cnt+(self.s_cnt)  #基底変数の要素番号を保存
+                m+=1
+                k+=1
+            if self.e_compare[i]=="Equal":
+                self.table[i+self.o_cnt][k+self.v_cnt+(self.s_cnt)+1]=1
+                self.bases[k+self.v_cnt+(self.s_cnt)]=1
+                self.bcol[m]=k+self.v_cnt+(self.s_cnt)  #基底変数の要素番号を保存
+                m+=1
+                k+=1
 
-    i=0
-    j=0
-    while i<a_cnt:          #人為変数を表に書くループ
-        if self.e_compare[i]=="Greater" or self.e_compare[i]=="Equal":
-            c_table[i+2][i+v_cnt+s_cnt+1]=1  #人為変数の係数を表に書く(人為変数は基底のため係数１)
-        if self. e_compare[i]=="Less":
-            i-=1
-        i+=1
-
-    for i in range(self.v_cnt+self.s_cnt+1):
-      for j in range(len(self.e_right)):
-        c_table[0][i]=c_table[0][i]+c_table[j+2][i]  #フェーズ1の目的関数行に制約行をたす(人為変数を基底にするため)
-
-    print(c_table) 
-
-    return c_table          #生成した行列を__init__の中に戻す
-
+        if self.a_cnt>0:  #二段階法するとき
+            for i in range(self.v_cnt+self.s_cnt+1):
+                for j in range(len(self.e_right)):
+                    self.table[0][i]=self.table[0][i]+self.table[j+self.o_cnt][i]  #フェーズ1の目的関数行に制約行をたす(人為変数を基底にするため)
+ 
   def solution(self):
     for i in range(self.s_cnt+self.v_cnt):
       if self.bases[i]==1:
@@ -157,9 +157,11 @@ class SimplexTable:
         if(i!=pivot_col):
          self.table[i][j]=self.table[i][j]-b*self.table[pivot_col][j]    #各行からb倍したピボット行を引く
 
+    print(self.bcol)
     #基底変数を表すリストを更新(基底を1に非基底を0に)
     self.bases[pivot_row-1]=1
-    self.bases[pivot_col+self.v_cnt-1]=0    
+    b=self.bcol[pivot_col-self.o_cnt]    #bは小数になっている
+    self.bases[int(b)]=0        #basesのb番目を0にする
     self.count+=1   #回数を＋1
 
     print("\n"+str(self.count)+" time bases list:")
@@ -191,8 +193,8 @@ s_cnt=0 #スラック変数の数
 v_cnt=2 #変数の数（ここで設定する）
 
 
-
-'''制約がLessだけの例題
+'''
+#制約がLessだけの例題
 obj=np.array([-4,-3])
 #制約式の係数と右辺
 e_left=np.array([[1,2],
@@ -200,14 +202,13 @@ e_left=np.array([[1,2],
                 [6,4]])
 e_right=np.array([2,19,7])
 #不等号の向き（<=のときLess）Lessの場合のみを考える
-e_compare = ['Less', 'Less']
+e_compare = ['Less', 'Less','Less']
 # スラック変数の数＝制約の数
-s_cnt = len(e_right)
-#制約の数
-#e_cnt=len(e_right)
+s_cnt = 0
+v_cnt=2 #変数の数（ここで設定する）
+a_cnt=0 #人為変数の数
 '''
 
-<<<<<<< HEAD
 
 #それぞれ変数の数を決める
 for cmp in e_compare:
@@ -222,13 +223,10 @@ for cmp in e_compare:
 
 start=time.time()
 simplex_table = SimplexTable(v_cnt=v_cnt, s_cnt=s_cnt,a_cnt=a_cnt, obj=obj, e_left=e_left, e_right=e_right, e_compare=e_compare)
-=======
-start=time.time()
-simplex_table = SimplexTable(v_cnt=2, s_cnt=s_cnt, obj=obj, e_left=e_left, e_right=e_right, e_compare=e_compare)
->>>>>>> 6ef73b8585a7e62bf37fc318acbbc43fe4ed367a
 simplex_table.choose_pivot()
 
 finish=time.time()
 
 jikan=finish-start
-print("Time:"+str(jikan))
+print("Time:")
+print('{:.08f}'.format(jikan))
