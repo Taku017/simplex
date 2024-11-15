@@ -17,7 +17,7 @@ class SimplexTable:
 
     if a_cnt!=0:#目的関数の数が2つ必要な時
        self.o_cnt=2
-    else:
+    else:     #二段階法がいらないとき、または二段階法のフェーズ2
        self.o_cnt=1
     
 #基底変数に当たる要素を1にする
@@ -34,7 +34,7 @@ class SimplexTable:
       self.set_value1()
     if a_cnt>0:             #二段階法を適用するとき
       self.set_value2()
-    
+      print("phase 1")
     print("bases list:")
     print(self.bases)
     print(self.table)
@@ -103,14 +103,20 @@ class SimplexTable:
     i=1
     pivot_row=0                     #ピボット列初期化（0のままだと基底にすべき変数がなかったことを表す）
     min_ratio=0   #最小の比を0に初期化
-    while i<=self.v_cnt+self.s_cnt+self.a_cnt:                     #変数の数だけループ
-      if self.table[0][i]>0:
-        if pivot_row==0:            #初めて正の要素が来たらその列をピボット候補に
-          pivot_row=i
-        else:
-          if self.table[0][pivot_row]<self.table[0][i]:        #目的関数の中で係数が大きいものを選ぶ
-            pivot_row=i                                 #ピボットする列の番号
-      i+=1
+    while True:
+      while i<=self.v_cnt+self.s_cnt+self.a_cnt:                     #変数の数だけループ
+        if self.table[0][i]>0:
+          if pivot_row==0:            #初めて正の要素が来たらその列をピボット候補に
+            pivot_row=i
+          else:
+            if self.table[0][pivot_row]<self.table[0][i]:        #目的関数の中で係数が大きいものを選ぶ
+              pivot_row=i                                 #ピボットする列の番号
+        i+=1
+      #フェーズ2のに移行するとき
+      if self.a_cnt!=0 and pivot_row==0 and self.count!=0:
+          self.init_phase2()
+      if pivot_row!=0:
+          break
 
     if pivot_row!=0:
         print("\npivot row:"+str(pivot_row))
@@ -120,10 +126,15 @@ class SimplexTable:
         self.ans=self.solution() 
         print(self.ans)
 
-
     if pivot_row==0 and self.count==0:                    #基底の入れ換えを一度もせず基底にすべき変数がないとき
-        print("choose pivot error") 
+        print("Pivot selection error") 
    
+#フェーズ2のに移行するとき
+    if self.a_cnt!=0 and pivot_row==0 and self.count!=0:
+        self.init_phase2()
+
+ 
+
     if pivot_row!=0:                                     #基底の入れ換えをすべきとき
       for i in range(len(self.e_right)):             #制約の数だけループ
         if self.table[i+self.o_cnt][pivot_row]>0:
@@ -145,7 +156,8 @@ class SimplexTable:
       self.swapping_bases(pivot_col,pivot_row)
 
 
-  def swapping_bases(self,pivot_col,pivot_row):      #基底の入れ替え
+#基底の入れ替え
+  def swapping_bases(self,pivot_col,pivot_row):      
     a=self.table[pivot_col][pivot_row]                #分母a
     for i in range(self.s_cnt+self.v_cnt+self.a_cnt+1):
       self.table[pivot_col][i]=self.table[pivot_col][i]/a    #ピボット行を選んだ要素で割る
@@ -170,7 +182,23 @@ class SimplexTable:
     
     self.choose_pivot()
 
+#フェーズ2の数値設定
+  def init_phase2(self):
+    print("Phase 1 completed\n\nPhase 2")
+    self.count=0  #試行回数の初期化
+    self.o_cnt=1  #目的関数の数を１に
+    self.a_cnt=0  #人為変数列はいらないため０に（a_cnt==0のとき二段階法をしなくなる）  
+    copy=self.table
+    self.table=np.zeros((len(self.e_left)+self.o_cnt,self.v_cnt+self.s_cnt+1))  #人為変数列とフェーズ1の目的関数行を消した要素０のリスト
+    self.table=copy[1:len(self.e_right)+2,0:self.v_cnt+self.s_cnt+1]
+    copy=self.bases
+    self.bases=np.zeros(s_cnt+v_cnt)
+    self.bases=copy[0:self.v_cnt+self.s_cnt]
+    print(self.bases)
+    print(self.table)
+    self.ans= np.zeros(s_cnt+v_cnt) 
 
+    self.choose_pivot()
 
 
 #目的関数の係数
