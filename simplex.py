@@ -1,3 +1,4 @@
+from tkinter import SEL
 import numpy as np
 import time
 
@@ -14,6 +15,11 @@ class SimplexTable:
     self.count=0         #基底の入れ換え操作の回数
     self.ans= np.zeros(s_cnt+v_cnt+a_cnt)     #最適解を入れるリスト
     self.bcol=np.zeros(len(e_right))   #基底の数だけ要素を持つリスト
+    self.jinigyou=np.zeros(a_cnt)  #人為変数の1がある行を保存するリスト
+
+    self.end=0      #最適解に到達したら1にしてすべてのメソッドから出る
+
+    self.min=0      #最適解を入れる
 
     if a_cnt!=0:#目的関数の数が2つ必要な時
        self.o_cnt=2
@@ -26,22 +32,27 @@ class SimplexTable:
         while i<self.v_cnt+self.s_cnt:        
             self.bases[i]=1
             i+=1    
-
-    print(v_cnt,s_cnt,a_cnt)   
-
+            
     self.table=self._create_table()
-    if a_cnt==0:            #二段階法を適用しなくてよいとき
-      self.set_value1()
+ 
+ #ここは没案   
+#   if a_cnt==0:            #二段階法を適用しなくてよいとき
+#     self.set_value1()
+#   if a_cnt>0:             #二段階法を適用するとき
+
+
+#二段階法をするしないに問わずset_value2()に行く
+    self.set_value2()
+    
     if a_cnt>0:             #二段階法を適用するとき
-      self.set_value2()
-      print("phase 1")
+        print("phase 1")
     print("bases list:")
     print(self.bases)
     print(self.table)
 
   def _create_table(self):
     c_table=np.zeros((len(self.e_left)+self.o_cnt,self.v_cnt+self.s_cnt+self.a_cnt+1))  #このメソッド内だけの名前で０行列を作る。行の数を基底変数+目的関数の数にする(基底変数の数と制約式の数は等しい)
-    c_table[self.o_cnt:self.s_cnt+self.o_cnt, 1:self.v_cnt+1] = self.e_left  # 制約式の左辺の係数
+    c_table[self.o_cnt:len(self.e_right)+self.o_cnt, 1:self.v_cnt+1] = self.e_left  # 制約式の左辺の係数
         
     c_table[self.o_cnt-1, 1:self.v_cnt+1] = self.obj
   
@@ -49,11 +60,11 @@ class SimplexTable:
     
     
     
-   
-  def set_value1(self):
-    for i in range(s_cnt):
-            self.table[i+self.o_cnt, self.v_cnt + i+1] = 1  # 基底のスラック変数を追加（１の要素）
-            self.table[i+1, 0] = self.e_right[i]  # 右辺の値を設定
+#ここは没案、二段階法をしないときに使うつもりだった   
+#  def set_value1(self):
+#    for i in range(s_cnt):
+#            self.table[i+self.o_cnt, self.v_cnt + i+1] = 1  # 基底のスラック変数を追加（１の要素）
+#            self.table[i+1, 0] = self.e_right[i]  # 右辺の値を設定
 
 
 
@@ -62,43 +73,54 @@ class SimplexTable:
         j=0 #スラック変数を記入する列に使う(0からs_cnt-1まで変化)
         k=0 #人為変数変数を記入する列に使う(0からa_cnt-1まで変化)
         m=0 
+        n=0
         for i in range(len(self.e_right)):  #iは行に使う
             self.table[i+self.o_cnt, 0] = self.e_right[i]  # 右辺の値を設定
             #スラック変数と人為の係数を表に書く(行ごとに)
             if self.e_compare[i]=="Less":
                 self.table[i+self.o_cnt][j+self.v_cnt+1]=1
-                j+=1
                 self.bases[j+self.v_cnt]=1      #Lessのスラック変数は基底
+                self.bcol[m]=j+self.v_cnt  #基底変数の要素番号を保存
+                j+=1
+                m+=1
             if self.e_compare[i]=="Greater":
                 self.table[i+self.o_cnt][j+self.v_cnt+1]=-1     #スラック変数は係数-1
                 j+=1
                 self.table[i+self.o_cnt][k+self.v_cnt+(self.s_cnt)+1]=1     #人為変数は1
                 self.bases[k+self.v_cnt+(self.s_cnt)]=1
+                self.jinigyou[n]=i+self.o_cnt  #人為変数のある行を目的関数行に足すのに使うjinigyou
                 self.bcol[m]=k+self.v_cnt+(self.s_cnt)  #基底変数の要素番号を保存
                 m+=1
                 k+=1
+                n+=1
             if self.e_compare[i]=="Equal":
                 self.table[i+self.o_cnt][k+self.v_cnt+(self.s_cnt)+1]=1
                 self.bases[k+self.v_cnt+(self.s_cnt)]=1
                 self.bcol[m]=k+self.v_cnt+(self.s_cnt)  #基底変数の要素番号を保存
+                self.jinigyou[n]=i+self.o_cnt
+                n+=1
                 m+=1
                 k+=1
-
+        print(self.jinigyou)
         if self.a_cnt>0:  #二段階法するとき
             for i in range(self.v_cnt+self.s_cnt+1):
-                for j in range(len(self.e_right)):
-                    self.table[0][i]=self.table[0][i]+self.table[j+self.o_cnt][i]  #フェーズ1の目的関数行に制約行をたす(人為変数を基底にするため)
+                for j in range(self.a_cnt):
+                    col=self.jinigyou[j]
+                    self.table[0][i]=self.table[0][i]+self.table[int(col)][i]  #フェーズ1の目的関数行に制約行をたす(人為変数を基底にするため)
  
   def solution(self):
+    print(self.bcol)
     for i in range(self.s_cnt+self.v_cnt):
       if self.bases[i]==1:
-        for j in range(self.s_cnt):
+        for j in range(len(self.e_right)):
           if self.table[j+1][i+1]==1:
             self.ans[i]=self.table[j+1][0]
 
     return self.ans
 
   def choose_row(self):
+    if self.end==1:
+       return
     i=1
     pivot_row=0                     #ピボット列初期化（0のままだと基底にすべき変数がなかったことを表す）
 
@@ -111,11 +133,42 @@ class SimplexTable:
             if self.table[0][pivot_row]<self.table[0][i]:        #目的関数の中で係数が大きいものを選ぶ
               pivot_row=i                                 #ピボットする列の番号
       i+=1
-    print(pivot_row)
     return pivot_row
 
-  def choose_pivot(self):           #ピボットを選ぶ関数
-    min_ratio=0   #最小の比を0に初期化
+
+  def choose_col(self,pivot_row):
+    if self.end==1:
+       return
+    
+    min_ratio=0   #最小の比を0に初期化    
+    if pivot_row!=0:                                     #基底の入れ換えをすべきとき
+      for i in range(len(self.e_right)):             #制約の数だけループ
+        if self.table[i+self.o_cnt][pivot_row]>0:
+          ratio=self.table[i+self.o_cnt][0]/self.table[i+self.o_cnt][pivot_row]           #列ごとに比を計算
+          print("ratio:"+str(ratio))
+        if self.table[i+self.o_cnt][pivot_row]<=0:     #比を計算しないとき
+          ratio=0           #比がないことを表す
+          print("ratio:No calculation required")
+ 
+        if min_ratio==0 and ratio!=0:
+          min_ratio=ratio                #最初に計算できた比は比の最小値に入れる
+          pivot_col=i+self.o_cnt
+        if ratio<min_ratio and ratio!=0:               #今考えている比が暫定最小比よりも小さいとき
+          min_ratio=ratio
+          pivot_col=i+self.o_cnt
+      if min_ratio==0:
+         self.end==1
+         return  #ピボットすべき行がなかったとき処理を終了
+      print("minimum ratio:"+str(min_ratio))
+      print("pivot:"+str(pivot_col)+","+str(pivot_row))
+
+    return pivot_col
+
+
+  def choose_pivot(self):           #ピボットを選ぶ関数(フェーズ1・2で2重にchoose_pivotに入る)
+    if self.end==1:
+       return
+    
     pivot_row=self.choose_row()  
     
  
@@ -127,43 +180,39 @@ class SimplexTable:
     if pivot_row!=0:
         print("\npivot row:"+str(pivot_row))
 
-    if pivot_row==0 and self.count!=0:                    #基底の入れ換えを一度でもした後で基底にすべき変数がないとき
-        print("最適解に到達しました。")
+    if pivot_row==0 and self.count!=0 and self.end==0:                    #基底の入れ換えを一度でもした後で基底にすべき変数がないとき(フェーズ1・2で2重にchoose_pivotに入るためend==0でこの条件に一度のみ入るようにする)
+        print("\nThe optimal solution has been reached.")
+        self.end=1
         self.ans=self.solution() 
         print(self.ans)
+        self.obj=self.obj*-1  #表への記入のために－1倍したものを戻す
+        print("\noptimal solution:")
+        for i in range(self.v_cnt):
+          self.min+=self.obj[i]*self.ans[i]
+          print(str(self.obj[i])+"*"+str(self.ans[i]), end='')
+          if i!=self.v_cnt:
+             print("+",end='')
+        print("="+str(self.min))
+        return
 
     if pivot_row==0 and self.count==0:                    #基底の入れ換えを一度もせず基底にすべき変数がないとき
-        print("Pivot selection error") 
+        print("Pivot selection error")
+        return
    
 #フェーズ2に移行するとき
     if self.a_cnt!=0 and pivot_row==0 and self.count!=0:
         self.init_phase2()
 
- 
+    pivot_col=self.choose_col(pivot_row)
 
-    if pivot_row!=0:                                     #基底の入れ換えをすべきとき
-      for i in range(len(self.e_right)):             #制約の数だけループ
-        if self.table[i+self.o_cnt][pivot_row]>0:
-          ratio=self.table[i+self.o_cnt][0]/self.table[i+self.o_cnt][pivot_row]           #列ごとに比を計算
-          print("ratio:"+str(ratio))
-        if self.table[i+self.o_cnt][pivot_row]<=0:
-          ratio=0
-          print("ratio:No calculation required")
- 
-        if min_ratio==0 and ratio!=0:
-          min_ratio=ratio                #最初に計算できた比は比の最小値に入れる
-          pivot_col=i+self.o_cnt
-        if ratio<min_ratio and ratio!=0:               #今考えている比が暫定最小比よりも小さいとき
-          min_ratio=ratio
-          pivot_col=i+self.o_cnt
-      print("minimum ratio:"+str(min_ratio))
-      print("pivot:"+str(pivot_col)+","+str(pivot_row))
-
-      self.swapping_bases(pivot_col,pivot_row)
+    self.swapping_bases(pivot_col,pivot_row)
 
 
 #基底の入れ替え
   def swapping_bases(self,pivot_col,pivot_row):      
+    if self.end==1:
+       return
+    
     a=self.table[pivot_col][pivot_row]                #分母a
     for i in range(self.s_cnt+self.v_cnt+self.a_cnt+1):
       self.table[pivot_col][i]=self.table[pivot_col][i]/a    #ピボット行を選んだ要素で割る
@@ -190,7 +239,10 @@ class SimplexTable:
 
 #フェーズ2の数値設定
   def init_phase2(self):
-    print("Phase 1 completed\n\nPhase 2")
+    if self.end==1:
+       return
+    
+    print("Phase 1 completed\n--------------\nPhase 2")
     self.count=0  #試行回数の初期化
     self.o_cnt=1  #目的関数の数を１に
     self.a_cnt=0  #人為変数列はいらないため０に（a_cnt==0のとき二段階法をしなくなる）  
@@ -207,27 +259,19 @@ class SimplexTable:
     self.choose_pivot()
 
 
+#制約がGreaterだけの問題
 #目的関数の係数
 obj=np.array([3,2])
-
 #制約式の係数と右辺
 e_left=np.array([[2,1],
                 [4,3],
                 [5,4]])
 e_right=np.array([20,56,73])
-
 #不等号の向き（<=のときLess,>=のときGreater,=のときEqual）
 e_compare = ['Greater', 'Greater','Greater']
-
-# スラック変数の数＝制約の数
-s_cnt = len(e_right)
-
-a_cnt=0 #人為変数の数
-s_cnt=0 #スラック変数の数
-v_cnt=2 #変数の数（ここで設定する）
-
-
 '''
+
+
 #制約がLessだけの例題
 obj=np.array([-4,-3])
 #制約式の係数と右辺
@@ -237,12 +281,24 @@ e_left=np.array([[1,2],
 e_right=np.array([2,19,7])
 #不等号の向き（<=のときLess）Lessの場合のみを考える
 e_compare = ['Less', 'Less','Less']
-# スラック変数の数＝制約の数
-s_cnt = 0
-v_cnt=2 #変数の数（ここで設定する）
-a_cnt=0 #人為変数の数
+'''
+'''
+#制約がGreater,Less,Equalの問題
+obj=np.array([-2,-3])
+e_left=np.array([[2,5],
+                [3,2],
+                [1,2]])
+e_right=np.array([20,14,6])
+e_compare=['Less','Greater','Equal']
 '''
 
+
+
+
+
+v_cnt=len(obj) #変数の数は目的関数の変数とする
+a_cnt=0 #人為変数の数の初期化
+s_cnt=0 #スラック変数の数の初期化
 
 #それぞれ変数の数を決める
 for cmp in e_compare:
@@ -254,7 +310,6 @@ for cmp in e_compare:
     if cmp=="Less":
         s_cnt+=1
 
-
 start=time.time()
 simplex_table = SimplexTable(v_cnt=v_cnt, s_cnt=s_cnt,a_cnt=a_cnt, obj=obj, e_left=e_left, e_right=e_right, e_compare=e_compare)
 simplex_table.choose_pivot()
@@ -262,5 +317,4 @@ simplex_table.choose_pivot()
 finish=time.time()
 
 jikan=finish-start
-print("Time:")
-print('{:.08f}'.format(jikan))
+print("\nTime:"+str(jikan))
