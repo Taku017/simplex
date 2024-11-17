@@ -98,25 +98,31 @@ class SimplexTable:
 
     return self.ans
 
-
-  def choose_pivot(self):           #ピボットを選ぶ関数
+  def choose_row(self):
     i=1
     pivot_row=0                     #ピボット列初期化（0のままだと基底にすべき変数がなかったことを表す）
-    min_ratio=0   #最小の比を0に初期化
-    while True:
-      while i<=self.v_cnt+self.s_cnt+self.a_cnt:                     #変数の数だけループ
-        if self.table[0][i]>0:
-          if pivot_row==0:            #初めて正の要素が来たらその列をピボット候補に
+
+    
+    while i<=self.v_cnt+self.s_cnt+self.a_cnt:                     #変数の数だけループ
+      if self.table[0][i]>0:
+        if pivot_row==0:            #初めて正の要素が来たらその列をピボット候補に
             pivot_row=i
-          else:
+        else:
             if self.table[0][pivot_row]<self.table[0][i]:        #目的関数の中で係数が大きいものを選ぶ
               pivot_row=i                                 #ピボットする列の番号
-        i+=1
-      #フェーズ2に移行するとき
-      if self.a_cnt!=0 and pivot_row==0 and self.count!=0:
-          self.init_phase2()
-      if pivot_row!=0:
-          break
+      i+=1
+    print(pivot_row)
+    return pivot_row
+
+  def choose_pivot(self):           #ピボットを選ぶ関数
+    min_ratio=0   #最小の比を0に初期化
+    pivot_row=self.choose_row()  
+    
+ 
+#フェーズ2に移行するとき
+    if self.a_cnt!=0 and pivot_row==0 and self.count!=0:
+        self.init_phase2()
+
 
     if pivot_row!=0:
         print("\npivot row:"+str(pivot_row))
