@@ -112,7 +112,7 @@ class SimplexTable:
             if self.table[0][pivot_row]<self.table[0][i]:        #目的関数の中で係数が大きいものを選ぶ
               pivot_row=i                                 #ピボットする列の番号
         i+=1
-      #フェーズ2のに移行するとき
+      #フェーズ2に移行するとき
       if self.a_cnt!=0 and pivot_row==0 and self.count!=0:
           self.init_phase2()
       if pivot_row!=0:
@@ -129,7 +129,7 @@ class SimplexTable:
     if pivot_row==0 and self.count==0:                    #基底の入れ換えを一度もせず基底にすべき変数がないとき
         print("Pivot selection error") 
    
-#フェーズ2のに移行するとき
+#フェーズ2に移行するとき
     if self.a_cnt!=0 and pivot_row==0 and self.count!=0:
         self.init_phase2()
 
@@ -147,7 +147,7 @@ class SimplexTable:
         if min_ratio==0 and ratio!=0:
           min_ratio=ratio                #最初に計算できた比は比の最小値に入れる
           pivot_col=i+self.o_cnt
-        if ratio<min_ratio:               #今考えている比が暫定最小比よりも小さいとき
+        if ratio<min_ratio and ratio!=0:               #今考えている比が暫定最小比よりも小さいとき
           min_ratio=ratio
           pivot_col=i+self.o_cnt
       print("minimum ratio:"+str(min_ratio))
