@@ -1,4 +1,3 @@
-from tkinter import SEL
 import numpy as np
 import time
 
@@ -158,7 +157,7 @@ class SimplexTable:
           pivot_col=i+self.o_cnt
       if min_ratio==0:
          self.end==1
-         return  #ピボットすべき行がなかったとき処理を終了
+         return  0#ピボットすべき行がなかったとき処理を終了
       print("minimum ratio:"+str(min_ratio))
       print("pivot:"+str(pivot_col)+","+str(pivot_row))
 
@@ -175,11 +174,12 @@ class SimplexTable:
 #フェーズ2に移行するとき
     if self.a_cnt!=0 and pivot_row==0 and self.count!=0:
         self.init_phase2()
-
+        return
 
     if pivot_row!=0:
         print("\npivot row:"+str(pivot_row))
 
+#行列操作の終わり
     if pivot_row==0 and self.count!=0 and self.end==0:                    #基底の入れ換えを一度でもした後で基底にすべき変数がないとき(フェーズ1・2で2重にchoose_pivotに入るためend==0でこの条件に一度のみ入るようにする)
         print("\nThe optimal solution has been reached.")
         self.end=1
@@ -190,7 +190,7 @@ class SimplexTable:
         for i in range(self.v_cnt):
           self.min+=self.obj[i]*self.ans[i]
           print(str(self.obj[i])+"*"+str(self.ans[i]), end='')
-          if i!=self.v_cnt:
+          if i!=self.v_cnt-1:
              print("+",end='')
         print("="+str(self.min))
         return
@@ -199,11 +199,12 @@ class SimplexTable:
         print("Pivot selection error")
         return
    
-#フェーズ2に移行するとき
-    if self.a_cnt!=0 and pivot_row==0 and self.count!=0:
-        self.init_phase2()
 
     pivot_col=self.choose_col(pivot_row)
+    
+    if pivot_col==0: #0のとき、すべての行がNo calculation requiredのとき。
+        print("unbounded")
+        return
 
     self.swapping_bases(pivot_col,pivot_row)
 
@@ -241,7 +242,18 @@ class SimplexTable:
   def init_phase2(self):
     if self.end==1:
        return
-    
+   
+   
+#ここで人為変数に基底があるとき、フェーズ2に以降せず実行不可能な問題であると表示
+    i=self.v_cnt+self.s_cnt+1
+    while i<self.v_cnt+self.s_cnt+self.a_cnt+1:
+       if self.table[0][i]==0:
+          print("This problem is not possible")
+          self.end=1
+          return    
+       i+=1 
+   
+      
     print("Phase 1 completed\n--------------\nPhase 2")
     self.count=0  #試行回数の初期化
     self.o_cnt=1  #目的関数の数を１に
@@ -259,6 +271,9 @@ class SimplexTable:
     self.choose_pivot()
 
 
+
+#問題はすべて数理計画法の講義資料より
+
 #制約がGreaterだけの問題
 #目的関数の係数
 obj=np.array([3,2])
@@ -269,9 +284,11 @@ e_left=np.array([[2,1],
 e_right=np.array([20,56,73])
 #不等号の向き（<=のときLess,>=のときGreater,=のときEqual）
 e_compare = ['Greater', 'Greater','Greater']
+
+
+
+
 '''
-
-
 #制約がLessだけの例題
 obj=np.array([-4,-3])
 #制約式の係数と右辺
@@ -282,6 +299,7 @@ e_right=np.array([2,19,7])
 #不等号の向き（<=のときLess）Lessの場合のみを考える
 e_compare = ['Less', 'Less','Less']
 '''
+
 '''
 #制約がGreater,Less,Equalの問題
 obj=np.array([-2,-3])
@@ -293,6 +311,27 @@ e_compare=['Less','Greater','Equal']
 '''
 
 
+'''
+#実行不可能な問題
+obj=np.array([-2,3])
+e_left=np.array([[4,3],
+                [-1,1],
+                [2,5]])
+e_right=np.array([11,6,9])
+e_compare=['Less','Greater','Greater']
+'''
+
+
+
+'''
+#非有界の問題
+obj=np.array([-1,-1])
+e_left=np.array([[-1,-1],
+                [-2,1],
+                [1,-2]])
+e_right=np.array([-1,1,1])
+e_compare=['Less','Less','Less']
+'''
 
 
 
