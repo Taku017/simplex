@@ -1,15 +1,17 @@
-from simplex import SimplexTable
+from linear_relaxation import SimplexTable
 import numpy as np
 import time
 
 
-#制約がGreater,Less,Equalの問題
-obj=np.array([-2,-3])
-e_left=np.array([[2,5],
-                [3,2],
-                [1,2]])
-e_right=np.array([20,14,6])
-e_compare=['Less','Greater','Equal']
+#
+obj=np.array([-3, -4, -5, -6])  #最大化を考えるので―1倍
+e_left=np.array([[2,3,4,5],
+                [1,0,0,0],
+                [0,1,0,0],
+                [0,0,1,0],
+                [0,0,0,1]])
+e_right=np.array([5,1,1,1,1])
+e_compare=['Less','Less','Less','Less','Less']
 
 v_cnt=len(obj) #変数の数は目的関数の変数とする
 a_cnt=0 #人為変数の数の初期化
@@ -33,3 +35,4 @@ finish=time.time()
 
 jikan=finish-start
 print("\nTime:"+str(jikan))
+
