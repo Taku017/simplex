@@ -1,5 +1,4 @@
-﻿import numpy as np
-import time
+import numpy as np
 
 class SimplexTable:
   def __init__(self, v_cnt,s_cnt,a_cnt, obj, e_left, e_right, e_compare):
@@ -100,7 +99,7 @@ class SimplexTable:
                 n+=1
                 m+=1
                 k+=1
-#        print(self.jinigyou)
+        print(self.jinigyou)
         if self.a_cnt>0:  #二段階法するとき
             for i in range(self.v_cnt+self.s_cnt+1):
                 for j in range(self.a_cnt):
@@ -142,6 +141,7 @@ class SimplexTable:
     min_ratio=-1   #最小の比を-1に初期化(退化するとき比0をとりうるかつ比が負になることはないため)比が負の時は一度も比が計算されていないことを表す    
     if pivot_row!=0:                                     #基底の入れ換えをすべきとき
       for i in range(len(self.e_right)):             #制約の数だけループ
+#        print(i)
         if self.table[i+self.o_cnt][pivot_row]>0:
           ratio=self.table[i+self.o_cnt][0]/self.table[i+self.o_cnt][pivot_row]           #列ごとに比を計算
           print("ratio:"+str(ratio))
@@ -149,12 +149,17 @@ class SimplexTable:
           ratio=-1           #比がないことを表す
           print("ratio:No calculation required")
  
-        if min_ratio==-1 and ratio!=-1:
+        if min_ratio==-1 and ratio!=-1:         #比が負の時は一度も比が計算されていないことを表す
           min_ratio=ratio                #最初に計算できた比は比の最小値に入れる
           pivot_col=i+self.o_cnt
+#          print(min_ratio,ratio)
+#          print("a")
         if ratio<min_ratio and ratio!=-1:               #今考えている比が暫定最小比よりも小さいとき
+#          print(min_ratio,ratio)
           min_ratio=ratio
           pivot_col=i+self.o_cnt
+#          print(min_ratio,ratio)
+#          print("b")
       if min_ratio==-1:
          self.end==1
          return  0#ピボットすべき行がなかったとき処理を終了
@@ -185,7 +190,7 @@ class SimplexTable:
         self.end=1
         self.ans=self.solution() 
         print(self.ans)
-        self.obj=self.obj*-1  #表への記入のために－1倍したものを戻す
+        self.obj=self.obj#*-1  #最大化を考えるときは－1倍しない#表への記入のために－1倍したものを戻す
         print("\noptimal solution:")
         for i in range(self.v_cnt):
           self.min+=self.obj[i]*self.ans[i]
@@ -270,104 +275,3 @@ class SimplexTable:
 
     self.choose_pivot()
 
-
-
-
-
-#制約がGreaterだけの問題
-#目的関数の係数
-obj=np.array([3,2])
-#制約式の係数と右辺
-e_left=np.array([[2,1],
-                [4,3],
-                [5,4]])
-e_right=np.array([20,56,73])
-#不等号の向き（<=のときLess,>=のときGreater,=のときEqual）
-e_compare = ['Greater', 'Greater','Greater']
-
-
-
-
-'''
-#制約がLessだけの例題
-obj=np.array([-4,-3])
-#制約式の係数と右辺
-e_left=np.array([[1,2],
-                [12,18],
-                [6,4]])
-e_right=np.array([2,19,7])
-#不等号の向き（<=のときLess）Lessの場合のみを考える
-e_compare = ['Less', 'Less','Less']
-'''
-
-'''
-#制約がGreater,Less,Equalの問題
-obj=np.array([-2,-3])
-e_left=np.array([[2,5],
-                [3,2],
-                [1,2]])
-e_right=np.array([20,14,6])
-e_compare=['Less','Greater','Equal']
-'''
-
-
-'''
-#実行不可能な問題
-obj=np.array([-2,3])
-e_left=np.array([[4,3],
-                [-1,1],
-                [2,5]])
-e_right=np.array([11,6,9])
-e_compare=['Less','Greater','Greater']
-'''
-
-
-
-'''
-#非有界の問題
-obj=np.array([-1,-1])
-e_left=np.array([[-1,-1],
-                [-2,1],
-                [1,-2]])
-e_right=np.array([-1,1,1])
-e_compare=['Less','Less','Less']
-'''
-
-'''
-#退化する問題
-obj=np.array([-16, -19, -23, -28])
-e_left=np.array([[2,3,4,5],
-                [1,0,0,0],
-                [0,1,0,0],
-                [0,0,1,0],
-                [0,0,0,1]])
-e_right=np.array([7,1,1,1,1])
-e_compare=['Less','Less','Less','Less','Less']
-'''
-
-
-
-
-
-v_cnt=len(obj) #変数の数は目的関数の変数とする
-a_cnt=0 #人為変数の数の初期化
-s_cnt=0 #スラック変数の数の初期化
-
-#それぞれ変数の数を決める
-for cmp in e_compare:
-    if cmp=="Greater":
-        a_cnt+=1
-        s_cnt+=1
-    if cmp=="Equal":
-        a_cnt+=1
-    if cmp=="Less":
-        s_cnt+=1
-
-start=time.time()
-simplex_table = SimplexTable(v_cnt=v_cnt, s_cnt=s_cnt,a_cnt=a_cnt, obj=obj, e_left=e_left, e_right=e_right, e_compare=e_compare)
-simplex_table.choose_pivot()
-
-finish=time.time()
-
-jikan=finish-start
-print("\nTime:"+str(jikan))
