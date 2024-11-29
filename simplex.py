@@ -355,6 +355,18 @@ e_right=np.array([2,19,7])
 e_compare = ['Less', 'Less','Less']
 '''
 
+
+#上の制約がLessだけの例題を制約式―1倍した問題
+obj=np.array([-4,-3])
+#制約式の係数と右辺
+e_left=np.array([[-1,-2],
+                [-12,-18],
+                [-6,-4]])
+e_right=np.array([-2,-19,-7])
+#不等号の向き（<=のときLess）Lessの場合のみを考える
+e_compare = ['Greater', 'Greater','Greater']
+
+
 '''
 #制約がGreater,Less,Equalの問題
 obj=np.array([-2,-3])
@@ -400,6 +412,7 @@ e_right=np.array([7,1,1,1,1])
 e_compare=['Less','Less','Less','Less','Less']
 '''
 
+'''
 #一度もピボット操作をしないで最適解＝0の問題(すべての変数＝0のとき最適解)
 #このときピボットエラーで最適解を表示できない(実行可能解にたどり着けていない場合との書き分けができていない)
 obj=np.array([3,5])
@@ -407,9 +420,17 @@ e_left=np.array([[1,2],
                 [1,1]])
 e_right=np.array([0,0,])
 e_compare=['Less','Less']
+'''
 
-
-
+'''
+#scipyでの比較問題
+obj=np.array([-1,4])
+e_left=np.array([[-3,1],
+                [1,2],
+                [0,-1]])
+e_right=np.array([6,4,3])
+e_compare=['Less','Less','Less']
+'''
 
 
 v_cnt=len(obj) #変数の数は目的関数の変数とする
