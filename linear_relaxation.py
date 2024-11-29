@@ -19,6 +19,8 @@ class SimplexTable:
 
     self.min=0      #最適解を入れる
 
+    self.sol=0
+
     if a_cnt!=0:#目的関数の数が2つ必要な時
        self.o_cnt=2
     else:     #二段階法がいらないとき、または二段階法のフェーズ2
