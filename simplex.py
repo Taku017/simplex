@@ -301,7 +301,7 @@ e_compare = ['Less', 'Less','Less']
 '''
 
 '''
-#一つ目の制約をGreaterにする
+#一つ目の制約をGreaterにする（非負条件違反）
 #目的関数の係数
 obj=np.array([3,2])
 #制約式の係数と右辺
@@ -314,7 +314,7 @@ e_compare = ['Greater', 'Less','Less']
 '''
 
 '''
-#二つ目の制約をGreaterへ
+#二つ目の制約をGreaterへ（非負条件違反）
 #目的関数の係数
 obj=np.array([3,2])
 #制約式の係数と右辺
@@ -326,8 +326,9 @@ e_right=np.array([-20,56,-73])
 e_compare = ['Less', 'Greater','Less']
 '''
 
+
 '''
-#制約がGreaterだけの問題を三つ目の制約をGreater
+#制約がGreaterだけの問題を三つ目の制約をGreater（非負条件違反）
 #目的関数の係数
 obj=np.array([3,2])
 #制約式の係数と右辺
@@ -356,6 +357,8 @@ e_compare = ['Less', 'Less','Less']
 '''
 
 
+
+'''
 #上の制約がLessだけの例題を制約式―1倍した問題
 obj=np.array([-4,-3])
 #制約式の係数と右辺
@@ -365,6 +368,7 @@ e_left=np.array([[-1,-2],
 e_right=np.array([-2,-19,-7])
 #不等号の向き（<=のときLess）Lessの場合のみを考える
 e_compare = ['Greater', 'Greater','Greater']
+'''
 
 
 '''
@@ -376,6 +380,15 @@ e_left=np.array([[2,5],
 e_right=np.array([20,14,6])
 e_compare=['Less','Greater','Equal']
 '''
+
+#制約がGreater,Less,Equalの問題
+obj=np.array([-2,-3])
+e_left=np.array([[2,5],
+                [3,2],
+                [1,2],
+                [1,2]])
+e_right=np.array([20,14,6,6])
+e_compare=['Less','Greater','Less','Greater']
 
 
 '''
@@ -432,6 +445,23 @@ e_right=np.array([6,4,3])
 e_compare=['Less','Less','Less']
 '''
 
+'''
+#memo
+obj=np.array([-10,57,9,24,0,0,0])
+e_left=np.array([[-0.5,5.5,2.5,-9,-1,0,0],
+                [-0.5,1.5,0.5,-1,0,-1,0],
+                [1,0,0,0,0,0,1]])
+e_right=np.array([0,0,0])
+e_compare=['Equal','Equal','Equal']
+
+
+obj=np.array([0,-53,-41,204,20,0,0])
+e_left=np.array([[-1,11,5,-18,-2,0,0],
+                [0,-4,-2,8,1,-1,0],
+                [0,-11,-5,18,2,0,-1]])
+e_right=np.array([0,0,-1])
+e_compare=['Equal','Equal','Equal']
+'''
 
 v_cnt=len(obj) #変数の数は目的関数の変数とする
 a_cnt=0 #人為変数の数の初期化
